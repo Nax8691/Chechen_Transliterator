@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Транслитерация</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+        .text-areas {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        textarea {
+            width: 300px;
+            height: 400px;
+            padding: 10px;
+            font-size: 16px;
+            resize: none;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #transliterateBtn {
+            background-color: #4CAF50;
+        }
+        #transliterateBtn:hover {
+            background-color: #45a049;
+        }
+        #clearBtn {
+            background-color: #f44336;
+        }
+        #clearBtn:hover {
+            background-color: #da190b;
+        }
+        #applyRulesBtn {
+            background-color: #2196F3;
+        }
+        #applyRulesBtn:hover {
+            background-color: #1976D2;
+        }
+        .rules-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .rules-table th, .rules-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        .rules-table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .rules-table input {
+            width: 100%;
+            padding: 5px;
+            font-size: 16px;
+            border: none;
+            text-align: center;
+        }
+        @media (max-width: 600px) {
+            .text-areas {
+                flex-direction: column;
+                align-items: center;
+            }
+            textarea {
+                width: 90vw;
+                height: 200px;
+            }
+            .rules-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Поля для ввода и вывода -->
+        <div class="text-areas">
+            <div>
+                <textarea id="inputText" placeholder="Введите текст на кириллице"></textarea>
+                <div class="button-container">
+                    <button id="transliterateBtn" onclick="transliterate()">Транслитерировать</button>
+                    <button id="clearBtn" onclick="clearFields()">Очистить</button>
+                </div>
+            </div>
+            <textarea id="outputText" readonly placeholder="Результат транслитерации"></textarea>
+        </div>
+
+        <!-- Таблица с правилами транслитерации -->
+        <table class="rules-table">
+            <thead>
+                <tr>
+                    <th>Чеченский символ</th>
+                    <th>Английский эквивалент</th>
+                </tr>
+            </thead>
+            <tbody id="rulesTableBody"></tbody>
+        </table>
+        <button id="applyRulesBtn" onclick="applyRules()">ОК</button>
+    </div>
+
+    <script>
+        // Полный массив правил транслитерации
+        let transliterationRules = [
+    {"cyrillic": "А", "transliteration": "A"},
+    {"cyrillic": "Аь", "transliteration": "Ae"},
+    {"cyrillic": "Б", "transliteration": "B"},
+    {"cyrillic": "В", "transliteration": "V"},
+    {"cyrillic": "Г", "transliteration": "G"},
+    {"cyrillic": "Гӏ", "transliteration": "G'"},
+    {"cyrillic": "Г1", "transliteration": "G'"},
+    {"cyrillic": "Д", "transliteration": "D"},
+    {"cyrillic": "Е", "transliteration": "Ye"},
+    {"cyrillic": "Ё", "transliteration": "Yo"},
+    {"cyrillic": "Ж", "transliteration": "J"},
+    {"cyrillic": "З", "transliteration": "Z"},
+    {"cyrillic": "И", "transliteration": "I"},
+    {"cyrillic": "Й", "transliteration": "Y"},
+    {"cyrillic": "К", "transliteration": "K"},
+    {"cyrillic": "Кх", "transliteration": "Kx"},
+    {"cyrillic": "Къ", "transliteration": "Q"},
+    {"cyrillic": "Кӏ", "transliteration": "K'"},
+    {"cyrillic": "К1", "transliteration": "K'"},
+    {"cyrillic": "Л", "transliteration": "L"},
+    {"cyrillic": "М", "transliteration": "M"},
+    {"cyrillic": "Н", "transliteration": "N"},
+    {"cyrillic": "О", "transliteration": "O"},
+    {"cyrillic": "Оь", "transliteration": "Oe"},
+    {"cyrillic": "П", "transliteration": "P"},
+    {"cyrillic": "Пӏ", "transliteration": "P'"},
+    {"cyrillic": "П1", "transliteration": "P'"},
+    {"cyrillic": "Р", "transliteration": "R"},
+    {"cyrillic": "С", "transliteration": "S"},
+    {"cyrillic": "Т", "transliteration": "T"},
+    {"cyrillic": "Тӏ", "transliteration": "T'"},
+    {"cyrillic": "Т1", "transliteration": "T'"},
+    {"cyrillic": "У", "transliteration": "U"},
+    {"cyrillic": "Уь", "transliteration": "Ue"},
+    {"cyrillic": "Ф", "transliteration": "F"},
+    {"cyrillic": "Х", "transliteration": "X"},
+    {"cyrillic": "Хь", "transliteration": "Kh"},
+    {"cyrillic": "Хӏ", "transliteration": "X'"},
+    {"cyrillic": "Х1", "transliteration": "X'"},
+    {"cyrillic": "Ц", "transliteration": "C"},
+    {"cyrillic": "Цӏ", "transliteration": "C'"},
+    {"cyrillic": "Ц1", "transliteration": "C'"},
+    {"cyrillic": "Ч", "transliteration": "Ch"},
+    {"cyrillic": "Чӏ", "transliteration": "Ch'"},
+    {"cyrillic": "Ч1", "transliteration": "Ch'"},
+    {"cyrillic": "Ш", "transliteration": "Sh"},
+    {"cyrillic": "Щ", "transliteration": "Shh"},
+    {"cyrillic": "Ъ", "transliteration": "h"},
+    {"cyrillic": "Ы", "transliteration": "Y"},
+    {"cyrillic": "Ь", "transliteration": "e"},
+    {"cyrillic": "Э", "transliteration": "He"},
+    {"cyrillic": "Ю", "transliteration": "Yu"},
+    {"cyrillic": "Юь", "transliteration": "Yue"},
+    {"cyrillic": "Я", "transliteration": "Ya"},
+    {"cyrillic": "Яь", "transliteration": "Yae"},
+    {"cyrillic": "ӏ", "transliteration": "'"},
+    {"cyrillic": "1", "transliteration": "'"}
+];
+        // Инициализация таблицы правил
+        function initRulesTable() {
+            const tableBody = document.getElementById('rulesTableBody');
+            if (!tableBody) {
+                console.error('Элемент #rulesTableBody не найден!');
+                return;
+            }
+            tableBody.innerHTML = '';
+            if (!transliterationRules || transliterationRules.length === 0) {
+                console.error('Массив transliterationRules пуст или не определен!');
+                tableBody.innerHTML = '<tr><td colspan="2">Ошибка: правила не загружены</td></tr>';
+                return;
+            }
+            transliterationRules.forEach(rule => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${rule.cyrillic}</td>
+                    <td><input type="text" value="${rule.transliteration}" data-cyrillic="${rule.cyrillic}"></td>
+                `;
+                tableBody.appendChild(row);
+            });
+            console.log('Таблица успешно инициализирована с', transliterationRules.length, 'правилами');
+        }
+
+        // Функция применения изменений в правилах
+        function applyRules() {
+            const inputs = document.querySelectorAll('#rulesTableBody input');
+            const newRules = [];
+            let hasErrors = false;
+            inputs.forEach(input => {
+                const cyrillic = input.getAttribute('data-cyrillic');
+                const transliteration = input.value.trim();
+                if (transliteration && /^[A-Za-z0-9'"]+$/.test(transliteration)) {
+                    newRules.push({ cyrillic, transliteration });
+                } else if (transliteration) {
+                    hasErrors = true;
+                }
+            });
+            if (hasErrors) {
+                alert('Некоторые поля содержат недопустимые символы! Используйте только латинские буквы, цифры, апостроф или кавычки.');
+                return;
+            }
+            if (newRules.length === 0) {
+                alert('Все поля пусты! Пожалуйста, заполните хотя бы одно поле.');
+                return;
+            }
+            transliterationRules = newRules;
+            alert('Правила транслитерации обновлены!');
+            initRulesTable(); // Обновляем таблицу для отображения новых правил
+        }
+
+        // Функция для изменения регистра результата транслитерации
+        function adjustCase(inputChar, transliteration) {
+            const isUpperCase = inputChar[0] === inputChar[0].toUpperCase();
+            if (transliteration.length === 1) {
+                return isUpperCase ? transliteration.toUpperCase() : transliteration.toLowerCase();
+            } else {
+                const firstChar = isUpperCase 
+                    ? transliteration.charAt(0).toUpperCase() 
+                    : transliteration.charAt(0).toLowerCase();
+                return firstChar + transliteration.slice(1).toLowerCase();
+            }
+        }
+
+        // Функция транслитерации
+        function transliterate() {
+            const input = document.getElementById('inputText').value;
+            if (!input.trim()) {
+                alert('Пожалуйста, введите текст для транслитерации!');
+                return;
+            }
+            let result = input;
+            const sortedRules = [...transliterationRules].sort((a, b) => b.cyrillic.length - a.cyrillic.length);
+            sortedRules.forEach(rule => {
+                const regex = new RegExp(rule.cyrillic, 'gi');
+                result = result.replace(regex, match => adjustCase(match, rule.transliteration));
+            });
+            document.getElementById('outputText').value = result;
+        }
+
+        // Функция очистки полей
+        function clearFields() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('outputText').value = '';
+        }
+
+        // Инициализация таблицы при загрузке страницы
+        window.onload = () => {
+            console.log('Страница загружена, инициализация таблицы...');
+            initRulesTable();
+        };
+    </script>
+</body>
+</html>
