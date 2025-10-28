@@ -48,4 +48,6 @@ Fork the repo, create a pull request, and let's make this tool even better for t
 
 Форкните репозиторий, создайте pull request — и давайте сделаем инструмент лучше для чеченской общины.
 
+Donate: Bitcoin(BTC)  bc1qcyk460u3t3fh0n4t0rqdjmwrzx89flgrfpgcet
+        Ethereum(ETH)   0x517a367a8Bcc2C5E7e2Eb98D8b40305Ba1706529
 
